@@ -46,3 +46,5 @@
 #define RGBLIGHT_SLEEP
 #endif
 #endif
+
+#define TAPPING_TERM 180
