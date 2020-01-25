@@ -126,6 +126,8 @@ void fn_ql_reset(qk_tap_dance_state_t *state, void *user_data) {
 }
 
 bool is_cc_super_alt = false;
+uint16_t alt_tap_timer = 0;
+bool alt_tap_active = false;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
@@ -136,6 +138,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       } else {
         // released
         is_cc_super_alt = false;
+        alt_tap_timer = timer_read();
+        if (alt_tap_active) {
+          unregister_code16(KC_LALT);
+        }
       }
       break;
 
@@ -182,10 +188,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       if (is_cc_super_alt) {
         if (record->event.pressed) {
           register_code16(KC_LALT);
-          register_code16(keycode);
+          register_code(keycode);
         } else {
           unregister_code16(KC_LALT);
-          unregister_code16(keycode);
+          unregister_code(keycode);
         }
       }
       break;
@@ -193,13 +199,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   return true;
 }
 
-// timer 
-
-// void matrix_scan_user(void) {     # The very important timer. 
-//   if (is_alt_tab_active) {
-//     if (timer_elapsed(alt_tab_timer) > 1000) {
-//       unregister_code(KC_LALT);
-//       is_alt_tab_active = false;
-//     }
-//   }
-// }
+void matrix_scan_user(void) {
+  if (is_cc_super_alt) {
+    if (timer_elapsed(alt_tap_timer) < 200) {
+      register_code16(KC_LALT);
+      alt_tap_active = true;
+    }
+  }
+}
