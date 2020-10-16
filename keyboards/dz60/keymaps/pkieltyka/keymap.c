@@ -10,7 +10,7 @@
 
 // Custom code
 enum {
-  CC_ALT = SAFE_RANGE,
+  CC_CTL = SAFE_RANGE,
   CC_ESC,
   CC_DEL
 };
@@ -32,7 +32,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 		KC_TAB,		KC_Q,			KC_W,			KC_E,			KC_R,			KC_T,			KC_Y,			KC_U,			KC_I,			KC_O,								KC_P,			KC_LBRC,		KC_RBRC,	KC_BSLS,
 		KC_LGUI,	KC_A,			KC_S,			KC_D,			KC_F,			KC_G,			KC_H,			KC_J,			KC_K,			KC_L,								KC_SCLN,	KC_QUOT,		KC_ENT,
 		KC_LSFT,	KC_Z,			KC_X,			KC_C,			KC_V,			KC_B,			KC_N,			KC_M,			KC_COMM,	KC_DOT,							KC_SLSH,	KC_PGUP,		KC_UP,		KC_PGDN,
-		KC_LCTL,	CC_ALT,	  KC_RCTL,						KC_NO,		KC_SPC,							KC_NO,		TD(TD_SUPER_FN),  	KC_RCTL,	KC_LEFT,		KC_DOWN, 	KC_RGHT
+		CC_CTL,	  KC_LALT,	KC_RCTL,						KC_NO,		KC_SPC,							KC_NO,		TD(TD_SUPER_FN),  	KC_RCTL,	KC_LEFT,		KC_DOWN, 	KC_RGHT
 	),
 
 	// layout-1 -- macos
@@ -125,28 +125,29 @@ void fn_ql_reset(qk_tap_dance_state_t *state, void *user_data) {
   td_fn_state = 0;
 }
 
-bool is_cc_super_alt = false;
-uint16_t alt_tap_timer = 0;
-bool alt_tap_active = false;
+bool is_cc_super_ctl = false;
+uint16_t ctl_tap_timer = 0;
+bool ctl_tap_active = false;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
   switch (keycode) {
-    case CC_ALT:
+    case CC_CTL:
       if (record->event.pressed) {
         // down
-        is_cc_super_alt = true;
+        is_cc_super_ctl = true;
       } else {
         // released
-        is_cc_super_alt = false;
-        alt_tap_timer = timer_read();
-        if (alt_tap_active) {
-          unregister_code16(KC_LALT);
+        is_cc_super_ctl = false;
+        ctl_tap_timer = timer_read();
+        if (ctl_tap_active) {
+          unregister_code16(KC_LCTL);
+          ctl_tap_active = false;
         }
       }
       break;
 
     case CC_ESC:
-      if (is_cc_super_alt) {
+      if (is_cc_super_ctl) {
         if (record->event.pressed) {
           register_code(KC_GRAVE);
         } else {
@@ -167,12 +168,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       break;
 
     case CC_DEL:
-      if (is_cc_super_alt) {
+      if (is_cc_super_ctl) {
         if (record->event.pressed) {
-          register_code16(KC_LALT);
+          register_code16(KC_LCTL);
           register_code(KC_DEL);
         } else {
-          unregister_code16(KC_LALT);
+          unregister_code16(KC_LCTL);
           unregister_code(KC_DEL);
         }
       } else {
@@ -185,12 +186,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       break;
 
     default:
-      if (is_cc_super_alt) {
+      if (is_cc_super_ctl) {
         if (record->event.pressed) {
-          register_code16(KC_LALT);
+          register_code16(KC_LCTL);
           register_code(keycode);
         } else {
-          unregister_code16(KC_LALT);
+          unregister_code16(KC_LCTL);
           unregister_code(keycode);
         }
       }
@@ -200,10 +201,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 void matrix_scan_user(void) {
-  if (is_cc_super_alt) {
-    if (timer_elapsed(alt_tap_timer) < 200) {
-      register_code16(KC_LALT);
-      alt_tap_active = true;
+  if (is_cc_super_ctl) {
+    if (timer_elapsed(ctl_tap_timer) < 200) {
+      register_code16(KC_LCTL);
+      ctl_tap_active = true;
     }
   }
 }
